@@ -1,31 +1,29 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Person } from '../types/Person';
-import { debounce } from 'lodash';
+import debounce from 'lodash.debounce';
 
 type Props = {
   selectedPerson: Person | null;
-  debounceDelay?: number;
   onSelected: (person: Person | null) => void;
+  debounceDelay?: number;
   people: Person[];
 };
 
 export const Autocomplete: React.FC<Props> = ({
   selectedPerson,
   onSelected,
-  debounceDelay = 300,
+  debounceDelay = 1000,
   people,
 }) => {
   const [query, setQuery] = useState<string>('');
   const [isFocused, setIsFocused] = useState(false);
+  const [appliedQuery, setAppliedQuery] = useState('');
 
-  const debouncedSetQuery = useMemo(
-    () => debounce((value: string) => setQuery(value), debounceDelay),
-    [debounceDelay],
-  );
+  const applyQuery = useCallback(debounce(setAppliedQuery, debounceDelay), []);
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
-    debouncedSetQuery(event.target.value);
+    applyQuery(event.target.value);
 
     if (selectedPerson) {
       onSelected(null);
@@ -34,24 +32,26 @@ export const Autocomplete: React.FC<Props> = ({
 
   const handlePersonSelect = (person: Person) => {
     onSelected(person);
-    setIsFocused(false);
+    // setIsFocused(false);
     setQuery(person.name);
   };
 
+  const normalizedQuery = appliedQuery.trim().toLocaleLowerCase();
+
   const getFilteredPeople = (humans: Person[]): Person[] => {
-    if (!query.trim().toLocaleLowerCase()) {
+    if (!normalizedQuery) {
       return humans;
     }
 
     return people.filter(person =>
-      person.name.toLowerCase().includes(query.trim().toLocaleLowerCase()),
+      person.name.toLowerCase().includes(normalizedQuery),
     );
   };
 
   const filteredPeople = getFilteredPeople(people);
 
   const noMatchingResults =
-    query.trim().toLocaleLowerCase() !== '' && filteredPeople.length === 0;
+    normalizedQuery !== '' && filteredPeople.length === 0;
 
   return (
     <>
