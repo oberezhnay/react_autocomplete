@@ -4,7 +4,7 @@ import { debounce } from 'lodash';
 
 type Props = {
   selectedPerson: Person | null;
-  delay?: number;
+  debounceDelay?: number;
   onSelected: (person: Person | null) => void;
   people: Person[];
 };
@@ -12,27 +12,20 @@ type Props = {
 export const Autocomplete: React.FC<Props> = ({
   selectedPerson,
   onSelected,
-  delay = 300,
+  debounceDelay = 300,
   people,
 }) => {
   const [query, setQuery] = useState<string>('');
   const [isFocused, setIsFocused] = useState(false);
 
   const debouncedSetQuery = useMemo(
-    () => debounce((value: string) => setQuery(value), delay),
-    [delay],
+    () => debounce((value: string) => setQuery(value), debounceDelay),
+    [debounceDelay],
   );
-  // const timerId = useRef(0);
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
     debouncedSetQuery(event.target.value);
-
-    // window.clearTimeout(timerId.current);
-
-    // timerId.current = window.setTimeout(() => {
-    //   setAppliedQuery(event.target.value);
-    // }, delay)
 
     if (selectedPerson) {
       onSelected(null);
@@ -41,6 +34,7 @@ export const Autocomplete: React.FC<Props> = ({
 
   const handlePersonSelect = (person: Person) => {
     onSelected(person);
+    setIsFocused(false);
     setQuery(person.name);
   };
 
@@ -67,6 +61,7 @@ export const Autocomplete: React.FC<Props> = ({
             type="text"
             placeholder="Enter a part of the name"
             className="input"
+            value={query}
             data-cy="search-input"
             onChange={handleQueryChange}
             onFocus={() => setIsFocused(true)}
