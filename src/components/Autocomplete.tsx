@@ -12,7 +12,7 @@ type Props = {
 export const Autocomplete: React.FC<Props> = ({
   selectedPerson,
   onSelected,
-  debounceDelay = 1000,
+  debounceDelay = 300,
   people,
 }) => {
   const [query, setQuery] = useState<string>('');
